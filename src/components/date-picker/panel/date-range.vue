@@ -15,7 +15,7 @@
                     <span
                         :class="iconBtnCls('prev')"
                         @click="prevMonth('left')"
-                        v-show="leftCurrentView === 'date'"><Icon type="ios-arrow-left"></Icon></span>
+                        :style="{ visibility: leftCurrentView === 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
                     <span
                         :class="[datePrefixCls + '-header-label']"
                         @click="showYearPicker('left')">{{ leftYearLabel }}</span>
@@ -25,11 +25,12 @@
                         v-show="leftCurrentView === 'date'">{{ leftMonthLabel }}</span>
                     <span
                         :class="iconBtnCls('next', '-double')"
-                        @click="nextYear('left')"><Icon type="ios-arrow-right"></Icon></span>
+                        @click="nextYear('left')"
+                        :style="{ visibility: rightYear > leftYear || leftCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
                     <span
                         :class="iconBtnCls('next')"
-                        @click="prevMonth('left')"
-                        v-show="leftCurrentView === 'date'"><Icon type="ios-arrow-right"></Icon></span>
+                        @click="nextMonth('left')"
+                        :style="{ visibility: leftCurrentView === 'date' && (rightYear > leftYear || rightMonth > leftMonth + 1) ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
                 </div>
                 <date-table
                     v-show="leftCurrentView === 'date'"
@@ -67,11 +68,12 @@
                 <div :class="[datePrefixCls + '-header']" v-show="rightCurrentView !== 'time'">
                      <span
                          :class="iconBtnCls('prev', '-double')"
-                         @click="prevYear('right')"><Icon type="ios-arrow-left"></Icon></span>
+                         @click="prevYear('right')"
+                         :style="{ visibility: rightYear > leftYear || rightCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
                     <span
                         :class="iconBtnCls('prev')"
-                        @click="prevMonth"
-                        v-show="rightCurrentView === 'date'"><Icon type="ios-arrow-left"></Icon></span>
+                        @click="prevMonth('right')"
+                        :style="{ visibility: rightCurrentView === 'date' && (rightYear > leftYear || rightMonth > leftMonth + 1) ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
                     <span
                         :class="[datePrefixCls + '-header-label']"
                         @click="showYearPicker('right')">{{ rightYearLabel }}</span>
@@ -85,7 +87,7 @@
                     <span
                         :class="iconBtnCls('next')"
                         @click="nextMonth('right')"
-                        v-show="rightCurrentView === 'date'"><Icon type="ios-arrow-right"></Icon></span>
+                        :style="{ visibility: rightCurrentView === 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
                 </div>
                 <date-table
                     v-show="rightCurrentView === 'date'"
@@ -263,9 +265,12 @@
                     this.minDate = null;
                     this.maxDate = null;
                 } else if (Array.isArray(newVal)) {
+                    console.log('test-ou:');
+                    console.log(newVal)
                     this.minDate = newVal[0] ? toDate(newVal[0]) : null;
                     this.maxDate = newVal[1] ? toDate(newVal[1]) : null;
-                    if (this.minDate) this.date = new Date(this.minDate);
+                    if (this.minDate) this.leftDate = new Date(this.minDate);
+                    if (this.maxDate) this.rightDate = new Date(this.maxDate);
                 }
                 if (this.showTime) this.$refs.timePicker.value = newVal;
             },
