@@ -14,8 +14,8 @@
                         @click="prevYear('left')"><Icon type="ios-arrow-left"></Icon></span>
                     <span
                         :class="iconBtnCls('prev')"
-                        @click="prevMonth"
-                        v-show="leftCurrentView === 'date'"><Icon type="ios-arrow-left"></Icon></span>
+                        @click="prevMonth('left')"
+                        :style="{ visibility: leftCurrentView === 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
                     <span
                         :class="[datePrefixCls + '-header-label']"
                         @click="showYearPicker('left')">{{ leftYearLabel }}</span>
@@ -26,13 +26,17 @@
                     <span
                         :class="iconBtnCls('next', '-double')"
                         @click="nextYear('left')"
-                        v-show="leftCurrentView === 'year' || leftCurrentView === 'month'"><Icon type="ios-arrow-right"></Icon></span>
+                        :style="{ visibility: rightYear > leftYear || leftCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
+                    <span
+                        :class="iconBtnCls('next')"
+                        @click="nextMonth('left')"
+                        :style="{ visibility: leftCurrentView === 'date' && (rightYear > leftYear || rightMonth > leftMonth + 1) ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
                 </div>
                 <date-table
                     v-show="leftCurrentView === 'date'"
                     :year="leftYear"
                     :month="leftMonth"
-                    :date="date"
+                    :date="leftDate"
                     :min-date="minDate"
                     :max-date="maxDate"
                     :range-state="rangeState"
@@ -65,7 +69,11 @@
                      <span
                          :class="iconBtnCls('prev', '-double')"
                          @click="prevYear('right')"
-                         v-show="rightCurrentView === 'year' || rightCurrentView === 'month'"><Icon type="ios-arrow-left"></Icon></span>
+                         :style="{ visibility: rightYear > leftYear || rightCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
+                    <span
+                        :class="iconBtnCls('prev')"
+                        @click="prevMonth('right')"
+                        :style="{ visibility: rightCurrentView === 'date' && (rightYear > leftYear || rightMonth > leftMonth + 1) ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
                     <span
                         :class="[datePrefixCls + '-header-label']"
                         @click="showYearPicker('right')">{{ rightYearLabel }}</span>
@@ -78,8 +86,8 @@
                         @click="nextYear('right')"><Icon type="ios-arrow-right"></Icon></span>
                     <span
                         :class="iconBtnCls('next')"
-                        @click="nextMonth"
-                        v-show="rightCurrentView === 'date'"><Icon type="ios-arrow-right"></Icon></span>
+                        @click="nextMonth('right')"
+                        :style="{ visibility: rightCurrentView === 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
                 </div>
                 <date-table
                     v-show="rightCurrentView === 'date'"
@@ -155,7 +163,8 @@
                 prefixCls: prefixCls,
                 datePrefixCls: datePrefixCls,
                 shortcuts: [],
-                date: initTimeDate(),
+                leftDate: null,
+                rightDate: null,
                 value: '',
                 minDate: '',
                 maxDate: '',
@@ -186,13 +195,13 @@
                 ];
             },
             leftYear () {
-                return this.date.getFullYear();
+                return this.leftDate.getFullYear();
             },
             leftTableDate () {
                 if (this.leftCurrentView === 'year' || this.leftCurrentView === 'month') {
                     return new Date(this.leftTableYear);
                 } else {
-                    return this.date;
+                    return this.leftDate;
                 }
             },
             leftYearLabel () {
@@ -209,7 +218,7 @@
                 }
             },
             leftMonth () {
-                return this.date.getMonth();
+                return this.leftDate.getMonth();
             },
             leftMonthLabel () {
                 const month = this.leftMonth + 1;
@@ -222,7 +231,7 @@
                 if (this.rightCurrentView === 'year' || this.rightCurrentView === 'month') {
                     return new Date(this.rightTableYear);
                 } else {
-                    return this.date;
+                    return this.rightDate;
                 }
             },
             rightYearLabel () {
@@ -239,24 +248,12 @@
                 }
             },
             rightMonth () {
-                return this.rightDate.getMonth();
+                const m = this.rightDate.getMonth();
+                return m;
             },
             rightMonthLabel () {
                 const month = this.rightMonth + 1;
                 return this.t(`i.datepicker.month${month}`);
-            },
-            rightDate () {
-                const newDate = new Date(this.date);
-                const month = newDate.getMonth();
-                newDate.setDate(1);
-
-                if (month === 11) {
-                    newDate.setFullYear(newDate.getFullYear() + 1);
-                    newDate.setMonth(0);
-                } else {
-                    newDate.setMonth(month + 1);
-                }
-                return newDate;
             },
             timeDisabled () {
                 return !(this.minDate && this.maxDate);
@@ -268,9 +265,12 @@
                     this.minDate = null;
                     this.maxDate = null;
                 } else if (Array.isArray(newVal)) {
+                    console.log('test-ou:');
+                    console.log(newVal)
                     this.minDate = newVal[0] ? toDate(newVal[0]) : null;
                     this.maxDate = newVal[1] ? toDate(newVal[1]) : null;
-                    if (this.minDate) this.date = new Date(this.minDate);
+                    if (this.minDate) this.leftDate = new Date(this.minDate);
+                    if (this.maxDate) this.rightDate = new Date(this.maxDate);
                 }
                 if (this.showTime) this.$refs.timePicker.value = newVal;
             },
@@ -288,15 +288,33 @@
             }
         },
         methods: {
+            initLeftDate () {
+                return initTimeDate();
+            },
+            initRightDate () {
+                const newDate = new Date(this.leftDate);
+                const month = newDate.getMonth();
+                newDate.setDate(1);
+
+                if (month === 11) {
+                    newDate.setFullYear(newDate.getFullYear() + 1);
+                    newDate.setMonth(0);
+                } else {
+                    newDate.setMonth(month + 1);
+                }
+                return newDate;
+            },
             resetDate () {
-                this.date = new Date(this.date);
-                this.leftTableYear = this.date.getFullYear();
+                this.leftDate = new Date(this.leftDate);
+                this.rightDate = new Date(this.rightDate);
+                this.leftTableYear = this.leftDate.getFullYear();
                 this.rightTableYear = this.rightDate.getFullYear();
             },
             handleClear() {
                 this.minDate = null;
                 this.maxDate = null;
-                this.date = new Date();
+                this.leftDate = this.initLeftDate();
+                this.rightDate = this.initRightDate();
                 this.handleConfirm();
                 if (this.showTime) this.$refs.timePicker.handleClear();
             },
@@ -315,7 +333,7 @@
                 } else if (this[`${direction}CurrentView`] === 'month') {
                     this[`${direction}TableYear`]--;
                 } else {
-                    const date = this.date;
+                    const date = this[`${direction}Date`];
                     date.setFullYear(date.getFullYear() - 1);
                     this.resetDate();
                 }
@@ -326,16 +344,18 @@
                 } else if (this[`${direction}CurrentView`] === 'month') {
                     this[`${direction}TableYear`]++;
                 } else {
-                    const date = this.date;
+                    const date = this[`${direction}Date`];
                     date.setFullYear(date.getFullYear() + 1);
                     this.resetDate();
                 }
             },
-            prevMonth () {
-                this.date = prevMonth(this.date);
+            prevMonth (direction) {
+                let date = this[`${direction}Date`];
+                this[`${direction}Date`] = prevMonth(date);
             },
-            nextMonth () {
-                this.date = nextMonth(this.date);
+            nextMonth (direction) {
+                let date = this[`${direction}Date`];
+                this[`${direction}Date`] = nextMonth(date);
             },
             handleLeftYearPick (year, close = true) {
                 this.handleYearPick(year, close, 'left');
@@ -357,17 +377,8 @@
             },
             handleMonthPick (month, direction) {
                 let year = this[`${direction}TableYear`];
-                if (direction === 'right') {
-                    if (month === 0) {
-                        month = 11;
-                        year--;
-                    } else {
-                        month--;
-                    }
-                }
-
-                this.date.setYear(year);
-                this.date.setMonth(month);
+                this[`${direction}Date`].setYear(year);
+                this[`${direction}Date`].setMonth(month);
                 this[`${direction}CurrentView`] = 'date';
                 this.resetDate();
             },
@@ -406,6 +417,10 @@
                 this.maxDate = date[1];
                 this.handleConfirm(false);
             }
+        },
+        created () {
+            this.leftDate = this.initLeftDate();
+            this.rightDate = this.initRightDate();
         },
         mounted () {
             if (this.showTime) {
