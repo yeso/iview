@@ -267,8 +267,11 @@
                 } else if (Array.isArray(newVal)) {
                     this.minDate = newVal[0] ? toDate(newVal[0]) : null;
                     this.maxDate = newVal[1] ? toDate(newVal[1]) : null;
-//                    if (this.minDate) this.leftDate = new Date(this.minDate);
-//                    if (this.maxDate) this.rightDate = new Date(this.maxDate);
+                    if (this.minDate) this.leftDate = new Date(this.minDate);
+                    if (this.maxDate) this.rightDate = new Date(this.maxDate);
+                    if (this.leftDate.getFullYear() === this.rightDate.getFullYear() && this.leftDate.getMonth() === this.rightDate.getMonth()) {
+                        this.leftDate = prevMonth(this.leftDate);
+                    }
                 }
                 if (this.showTime) this.$refs.timePicker.value = newVal;
             },
