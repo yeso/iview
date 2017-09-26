@@ -40,7 +40,7 @@
 
                     const date = new Date(this.date);
                     date.setFullYear(cell.text);
-                    cell.disabled = typeof this.disabledDate === 'function' && this.disabledDate(date) && this.selectionMode === 'year';
+                    cell.disabled = typeof this.disabledDate === 'function' && this.disabledDate(date);
 
                     cell.selected = Number(this.year) === cell.text;
                     cells.push(cell);

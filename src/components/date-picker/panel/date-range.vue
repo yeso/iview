@@ -26,7 +26,7 @@
                     <span
                         :class="iconBtnCls('next', '-double')"
                         @click="nextYear('left')"
-                        :style="{ visibility: rightYear > leftYear || leftCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
+                        :style="{ visibility: new Date(leftYear + 1, leftMonth) < new Date(rightYear, rightMonth) || leftCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-right"></Icon></span>
                     <span
                         :class="iconBtnCls('next')"
                         @click="nextMonth('left')"
@@ -51,7 +51,7 @@
                     :year="leftTableYear"
                     :date="leftTableDate"
                     selection-mode="range"
-                    :disabled-date="disabledDate"
+                    :disabled-date="makeDisabledDate('year', 'left')"
                     @on-pick="handleLeftYearPick"
                     @on-pick-click="handlePickClick"></year-table>
                 <month-table
@@ -60,7 +60,7 @@
                     :month="leftMonth"
                     :date="leftTableDate"
                     selection-mode="range"
-                    :disabled-date="disabledDate"
+                    :disabled-date="makeDisabledDate('month', 'left')"
                     @on-pick="handleLeftMonthPick"
                     @on-pick-click="handlePickClick"></month-table>
             </div>
@@ -69,7 +69,7 @@
                      <span
                          :class="iconBtnCls('prev', '-double')"
                          @click="prevYear('right')"
-                         :style="{ visibility: rightYear > leftYear || rightCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
+                         :style="{ visibility: new Date(leftYear + 1, leftMonth) < new Date(rightYear, rightMonth) || rightCurrentView !== 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
                     <span
                         :class="iconBtnCls('prev')"
                         @click="prevMonth('right')"
@@ -108,7 +108,7 @@
                     :year="rightTableYear"
                     :date="rightTableDate"
                     selection-mode="range"
-                    :disabled-date="disabledDate"
+                    :disabled-date="makeDisabledDate('year', 'right')"
                     @on-pick="handleRightYearPick"
                     @on-pick-click="handlePickClick"></year-table>
                 <month-table
@@ -117,7 +117,7 @@
                     :month="rightMonth"
                     :date="rightTableDate"
                     selection-mode="range"
-                    :disabled-date="disabledDate"
+                    :disabled-date="makeDisabledDate('month', 'right')"
                     @on-pick="handleRightMonthPick"
                     @on-pick-click="handlePickClick"></month-table>
             </div>
@@ -265,12 +265,10 @@
                     this.minDate = null;
                     this.maxDate = null;
                 } else if (Array.isArray(newVal)) {
-                    console.log('test-ou:');
-                    console.log(newVal)
                     this.minDate = newVal[0] ? toDate(newVal[0]) : null;
                     this.maxDate = newVal[1] ? toDate(newVal[1]) : null;
-                    if (this.minDate) this.leftDate = new Date(this.minDate);
-                    if (this.maxDate) this.rightDate = new Date(this.maxDate);
+//                    if (this.minDate) this.leftDate = new Date(this.minDate);
+//                    if (this.maxDate) this.rightDate = new Date(this.maxDate);
                 }
                 if (this.showTime) this.$refs.timePicker.value = newVal;
             },
@@ -416,6 +414,23 @@
                 this.minDate = date[0];
                 this.maxDate = date[1];
                 this.handleConfirm(false);
+            },
+            makeDisabledDate (type, direction) {
+                return date => {
+                    if (direction === 'left') {
+                        if (type === 'year') {
+                            return date.getFullYear() > this.rightYear;
+                        } else if (type === 'month') {
+                            return new Date(this.leftTableYear, date.getMonth()) >= new Date(this.rightDate.getFullYear(), this.rightDate.getMonth());
+                        }
+                    } else if (direction === 'right') {
+                        if (type === 'year') {
+                            return date.getFullYear() < this.leftYear;
+                        } else if (type === 'month') {
+                            return new Date(this.rightTableYear, date.getMonth()) <= new Date(this.leftDate.getFullYear(), this.leftDate.getMonth());
+                        }
+                    }
+                };
             }
         },
         created () {
