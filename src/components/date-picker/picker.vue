@@ -3,6 +3,7 @@
         <div ref="reference" :class="[prefixCls + '-rel']">
             <slot>
                 <i-input
+                    :element-id="elementId"
                     :class="[prefixCls + '-editor']"
                     :readonly="!editable || readonly"
                     :disabled="disabled"
@@ -202,6 +203,9 @@
             },
             name: {
                 type: String
+            },
+            elementId: {
+                type: String
             }
         },
         data () {
@@ -362,6 +366,8 @@
                         } else {
                             correctValue = formatDate(parsedDate, format);
                         }
+                    } else if (!parsedDate) {
+                        correctValue = '';
                     } else {
                         correctValue = oldValue;
                     }
@@ -507,9 +513,11 @@
 
                     if (val && type === 'time' && !(val instanceof Date)) {
                         val = parser(val, this.format || DEFAULT_FORMATS[type]);
-                    } else if (val && type === 'timerange' && Array.isArray(val) && val.length === 2 && !(val[0] instanceof Date) && !(val[1] instanceof Date)) {
+                    } else if (val && type.match(/range$/) && Array.isArray(val) && val.filter(Boolean).length === 2 && !(val[0] instanceof Date) && !(val[1] instanceof Date)) {
                         val = val.join(RANGE_SEPARATOR);
                         val = parser(val, this.format || DEFAULT_FORMATS[type]);
+                    } else if (typeof val === 'string' && type.indexOf('time') !== 0 ){
+                        val = parser(val, this.format || DEFAULT_FORMATS[type]) || val;
                     }
 
                     this.internalValue = val;

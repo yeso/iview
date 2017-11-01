@@ -1,5 +1,6 @@
 export default {
     i: {
+        locale: 'id-ID',
         select: {
             placeholder: 'Pilih',
             noMatch: 'Tidak ada data yang cocok',
@@ -19,6 +20,7 @@ export default {
             endTime: 'Waktu Selesai',
             clear: 'Bersihkan',
             ok: 'OK',
+            datePanelLabel: '[mmmm] [yyyy]',
             month: '',
             month1: 'Januari',
             month2: 'Februari',
@@ -33,6 +35,7 @@ export default {
             month11: 'November',
             month12: 'Desember',
             year: '',
+            weekStartDay: '1',
             weeks: {
                 sun: 'Min',
                 mon: 'Sen',

@@ -6,13 +6,14 @@
             @click="toggleMenu">
             <slot name="input">
                 <input type="hidden" :name="name" :value="model">
-                <div class="ivu-tag" v-for="(item, index) in selectedMultiple">
+                <div class="ivu-tag ivu-tag-checked" v-for="(item, index) in selectedMultiple">
                     <span class="ivu-tag-text">{{ item.label }}</span>
                     <Icon type="ios-close-empty" @click.native.stop="removeTag(index)"></Icon>
                 </div>
                 <span :class="[prefixCls + '-placeholder']" v-show="showPlaceholder && !filterable">{{ localePlaceholder }}</span>
                 <span :class="[prefixCls + '-selected-value']" v-show="!showPlaceholder && !multiple && !filterable">{{ selectedSingle }}</span>
                 <input
+                    :id="elementId"
                     type="text"
                     v-if="filterable"
                     v-model="query"
@@ -134,6 +135,9 @@
                 default: false
             },
             name: {
+                type: String
+            },
+            elementId: {
                 type: String
             }
         },
@@ -365,6 +369,7 @@
 
                     const selectedArray = [];
                     const selectedObject = {};
+
                     selected.forEach(item => {
                         if (!selectedObject[item.value]) {
                             selectedArray.push(item);
@@ -372,7 +377,8 @@
                         }
                     });
 
-                    this.selectedMultiple = this.remote ? selectedArray : selected;
+                    // #2066
+                    this.selectedMultiple = this.remote ? this.model.length ? selectedArray : [] : selected;
 
                     if (slot) {
                         let selectedModel = [];
