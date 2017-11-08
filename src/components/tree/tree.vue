@@ -33,6 +33,10 @@
                 type: Boolean,
                 default: false
             },
+            checkMode: {
+                type: String,
+                default: 'default'
+            },
             showCheckbox: {
                 type: Boolean,
                 default: false
@@ -101,15 +105,26 @@
 
                 const node = this.flatState[nodeKey].node;
                 const parent = this.flatState[parentKey].node;
-                if (node.checked == parent.checked && node.indeterminate == parent.indeterminate) return; // no need to update upwards
 
-                if (node.checked == true) {
-                    this.$set(parent, 'checked', parent.children.every(node => node.checked));
-                    this.$set(parent, 'indeterminate', !parent.checked);
-                } else {
-                    this.$set(parent, 'checked', false);
-                    this.$set(parent, 'indeterminate', parent.children.some(node => node.checked || node.indeterminate));
+                if (this.checkMode === 'default') {
+                    // 默认模式
+                    if (node.checked == parent.checked && node.indeterminate == parent.indeterminate) return; // no need to update upwards
+
+                    if (node.checked == true) {
+                        this.$set(parent, 'checked', parent.children.every(node => node.checked));
+                        this.$set(parent, 'indeterminate', !parent.checked);
+                    } else {
+                        this.$set(parent, 'checked', false);
+                        this.$set(parent, 'indeterminate', parent.children.some(node => node.checked || node.indeterminate));
+                    }
+                } else if (this.checkMode === 'bag') {
+                    // 父节点单独控制，子节点选中时父节点自动选中
+                    if (node.checked && parent.checked) return;
+                    if (node.checked) {
+                        this.$set(parent, 'checked', true);
+                    }
                 }
+
                 this.updateTreeUp(parentKey);
             },
             rebuildTree () { // only called when `data` prop changes
@@ -140,6 +155,8 @@
                     this.$set(node, key, changes[key]);
                 }
                 if (node.children) {
+                    // bag模式 父节点取消选中，则子节点全取消；父节点选中，不处理子节点
+                    if (this.checkMode === 'bag' && changes.checked) return;
                     node.children.forEach(child => {
                         this.updateTreeDown(child, changes);
                     });

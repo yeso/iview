@@ -202,7 +202,7 @@
 <template>
     <div>
         {{ data1 }}
-        <Tree :data="data1"></Tree>
+        <Tree :data="data1" show-checkbox checkMode="bag"></Tree>
     </div>
 </template>
 <script>
