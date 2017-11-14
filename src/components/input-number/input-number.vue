@@ -20,6 +20,7 @@
                 :class="inputClasses"
                 :disabled="disabled"
                 autocomplete="off"
+                spellcheck="false"
                 :autofocus="autofocus"
                 @focus="focus"
                 @blur="blur"
@@ -238,9 +239,11 @@
             },
             focus () {
                 this.focused = true;
+                this.$emit('on-focus');
             },
             blur () {
                 this.focused = false;
+                this.$emit('on-blur');
             },
             keyDown (e) {
                 if (e.keyCode === 38) {
