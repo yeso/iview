@@ -133,6 +133,7 @@ const iview = {
 };
 
 const install = function(Vue, opts = {}) {
+    if (install.installed) return;
     locale.use(opts.locale);
     locale.i18n(opts.i18n);
 
@@ -153,7 +154,7 @@ if (typeof window !== 'undefined' && window.Vue) {
 }
 
 const API = {
-    version: '2.7.2',
+    version: process.env.VERSION, // eslint-disable-line no-undef
     locale: locale.use,
     i18n: locale.i18n,
     install,
