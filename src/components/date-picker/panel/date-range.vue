@@ -16,13 +16,10 @@
                         :class="iconBtnCls('prev')"
                         @click="prevMonth('left')"
                         :style="{ visibility: leftCurrentView === 'date' ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
-                    <span
-                        :class="[datePrefixCls + '-header-label']"
-                        @click="showYearPicker('left')">{{ leftYearLabel }}</span>
-                    <span
-                        :class="[datePrefixCls + '-header-label']"
-                        @click="showMonthPicker('left')"
-                        v-show="leftCurrentView === 'date'">{{ leftMonthLabel }}</span>
+                    <date-panel-label
+                        :date-panel-label="leftDatePanelLabel"
+                        :current-view="leftCurrentView"
+                        :date-prefix-cls="datePrefixCls"/>
                     <span
                         :class="iconBtnCls('next', '-double')"
                         @click="nextYear('left')"
@@ -74,13 +71,10 @@
                         :class="iconBtnCls('prev')"
                         @click="prevMonth('right')"
                         :style="{ visibility: rightCurrentView === 'date' && (rightYear > leftYear || rightMonth > leftMonth + 1) ? 'visible' : 'hidden' }"><Icon type="ios-arrow-left"></Icon></span>
-                    <span
-                        :class="[datePrefixCls + '-header-label']"
-                        @click="showYearPicker('right')">{{ rightYearLabel }}</span>
-                    <span
-                        :class="[datePrefixCls + '-header-label']"
-                        @click="showMonthPicker('right')"
-                        v-show="rightCurrentView === 'date'">{{ rightMonthLabel }}</span>
+                    <date-panel-label
+                        :date-panel-label="rightDatePanelLabel"
+                        :current-view="rightCurrentView"
+                        :date-prefix-cls="datePrefixCls"/>
                     <span
                         :class="iconBtnCls('next', '-double')"
                         @click="nextYear('right')"><Icon type="ios-arrow-right"></Icon></span>
@@ -146,7 +140,8 @@
     import MonthTable from '../base/month-table.vue';
     import TimePicker from './time-range.vue';
     import Confirm from '../base/confirm.vue';
-    import { toDate, prevMonth, nextMonth, initTimeDate } from '../util';
+    import { toDate, prevMonth, nextMonth, initTimeDate, formatDateLabels } from '../util';
+    import datePanelLabel from './date-panel-label.vue';
 
     import Mixin from './mixin';
     import Locale from '../../../mixins/locale';
@@ -157,7 +152,7 @@
     export default {
         name: 'DatePicker',
         mixins: [ Mixin, Locale ],
-        components: { Icon, DateTable, YearTable, MonthTable, TimePicker, Confirm },
+        components: { Icon, DateTable, YearTable, MonthTable, TimePicker, Confirm, datePanelLabel },
         data () {
             return {
                 prefixCls: prefixCls,
@@ -204,25 +199,8 @@
                     return this.leftDate;
                 }
             },
-            leftYearLabel () {
-                const tYear = this.t('i.datepicker.year');
-                if (this.leftCurrentView === 'year') {
-                    const year = this.leftTableYear;
-                    if (!year) return '';
-                    const startYear = Math.floor(year / 10) * 10;
-                    return `${startYear}${tYear} - ${startYear + 9}${tYear}`;
-                } else {
-                    const year = this.leftCurrentView === 'month' ? this.leftTableYear : this.leftYear;
-                    if (!year) return '';
-                    return `${year}${tYear}`;
-                }
-            },
             leftMonth () {
                 return this.leftDate.getMonth();
-            },
-            leftMonthLabel () {
-                const month = this.leftMonth + 1;
-                return this.t(`i.datepicker.month${month}`);
             },
             rightYear () {
                 return this.rightDate.getFullYear();
@@ -234,26 +212,17 @@
                     return this.rightDate;
                 }
             },
-            rightYearLabel () {
-                const tYear = this.t('i.datepicker.year');
-                if (this.rightCurrentView === 'year') {
-                    const year = this.rightTableYear;
-                    if (!year) return '';
-                    const startYear = Math.floor(year / 10) * 10;
-                    return `${startYear}${tYear} - ${startYear + 9}${tYear}`;
-                } else {
-                    const year = this.rightCurrentView === 'month' ? this.rightTableYear : this.rightYear;
-                    if (!year) return '';
-                    return `${year}${tYear}`;
-                }
-            },
             rightMonth () {
                 const m = this.rightDate.getMonth();
                 return m;
             },
-            rightMonthLabel () {
-                const month = this.rightMonth + 1;
-                return this.t(`i.datepicker.month${month}`);
+            leftDatePanelLabel () {
+                if (!this.leftYear) return null; // not ready yet
+                return this.panelLabelConfig('left');
+            },
+            rightDatePanelLabel () {
+                if (!this.leftYear) return null; // not ready yet
+                return this.panelLabelConfig('right');
             },
             timeDisabled () {
                 return !(this.minDate && this.maxDate);
@@ -289,6 +258,22 @@
             }
         },
         methods: {
+            panelLabelConfig (direction) {
+                const locale = this.t('i.locale');
+                const datePanelLabel = this.t('i.datepicker.datePanelLabel');
+                const handler = type => {
+                    const fn = type == 'month' ? this.showMonthPicker : this.showYearPicker;
+                    return () => fn(direction);
+                };
+
+                const date = new Date(this[`${direction}Year`], this[`${direction}Month`]);
+                const { labels, separator } = formatDateLabels(locale, datePanelLabel, date);
+
+                return {
+                    separator: separator,
+                    labels: labels.map(obj => ((obj.handler = handler(obj.type)), obj))
+                };
+            },
             initLeftDate () {
                 return initTimeDate();
             },
